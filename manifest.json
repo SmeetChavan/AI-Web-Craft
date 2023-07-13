@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Coffee Shop",
+  "name_for_model": "coffee_shop",
+  "description_for_human": "This is a test plugin from PluginLab to learn how to create our first plugin.",
+  "description_for_model": "Coffee Shop plugin allows the users to list some coffees and then get some details for the coffee of their choice.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:4000/oas.json",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://firebasestorage.googleapis.com/v0/b/pluginlab.appspot.com/o/public%2Fcoffeeshop-logo.png?alt=media",
+  "contact_email": "support@coffeeshop.example",
+  "legal_info_url": "http://www.coffeeshop.example.legal"
+}
