@@ -5,7 +5,13 @@ const manifest = require("./manifest.json");
 const axios = require('axios');
 const OpenAI = require('openai-api');
 
-const api_key = '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';
+const dotenv = require('dotenv');
+
+dotenv.config({
+  path: "./.env",
+});
+
+const api_key = process.env.API_KEY;
 
 const openai = new OpenAI(api_key);
 
@@ -24,7 +30,6 @@ app.get("/coffees/list", (req, res) => {
 
   res.json(result);
 });
-
 
 
 app.get("/poet" , async (req , res) => {
