@@ -63,16 +63,18 @@ app.get("/completion" , async(req, res) => {
       topP: 1,
       presencePenalty: 0,
       frequencyPenalty: 0,
-      bestOf: 1,
-      n: 1,
+      bestOf: 2,
+      n: 2,
       stream: false,
       stop: ['\n', "testing"]
     });
+
+    const texts = gptResponse.data.choices.map((choice) => choice.text);
   
-    res.status(200).send(gptResponse.data.choices[0].text);
+    res.status(200).json(texts);
 
   } catch (error) {
-    console.error("Error:", error.response.data.error);
+    console.error("Error:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 })
