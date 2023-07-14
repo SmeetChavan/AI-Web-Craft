@@ -3,9 +3,9 @@ const coffees = require("./coffees.json");
 const oas = require("./oas.json");
 const manifest = require("./manifest.json");
 const axios = require('axios');
-const OpenAI = require('openai-api');
 
 const dotenv = require('dotenv');
+const { Configuration, OpenAIApi } = require("openai");
 
 dotenv.config({
   path: "./.env",
@@ -13,7 +13,10 @@ dotenv.config({
 
 const api_key = process.env.API_KEY;
 
-const openai = new OpenAI(api_key);
+const configuration = new Configuration({
+    apiKey: api_key,
+});
+const openai = new OpenAIApi(configuration);
 
 const app = express();
 
@@ -31,53 +34,18 @@ app.get("/coffees/list", (req, res) => {
   res.json(result);
 });
 
-
-app.get("/poet" , async (req , res) => {
-  try {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-3.5-turbo',
-      temperature: 0.8,
-      max_tokens: 2000,
-      messages: [
-        { role: 'system', content: 'You are a poet who creates poems that evoke emotions.' },
-        { role: 'user', content: 'Write a short poem for programmers.' }
-      ]
-    }, {
-      headers: {
-        'Authorization': `Bearer ${api_key}`,
-        'Content-Type': 'application/json',
-      }
-    });
-
-    const poem = response.data.choices[0].message.content;
-    res.status(200).send(poem);
-  } catch (error) {
-    console.error("Error:", error.response.data.error);
-    res.status(500).json({ error: "Something went wrong" });
-  }
-});
-
-app.get("/completion" , async(req, res) => {
+app.get("/image" , async (req , res) => {
 
   try {
-    const gptResponse = await openai.complete({
-      engine: 'davinci',
-      prompt: 'What are your',
-      maxTokens: 5,
-      temperature: 0.9,
-      topP: 1,
-      presencePenalty: 0,
-      frequencyPenalty: 0,
-      bestOf: 2,
-      n: 2,
-      stream: false,
-      stop: ['\n', "testing"]
-    });
 
-    const texts = gptResponse.data.choices.map((choice) => choice.text);
+    const response = await openai.createImage({
+      prompt: "A stylish barber shop banner",
+      n: 1,
+      size: "1024x1024",
+    });
   
-    res.status(200).json(texts);
-
+    res.status(200).send(response.data.data[0].url);
+  
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Something went wrong" });
