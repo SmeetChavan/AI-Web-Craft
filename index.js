@@ -36,16 +36,18 @@ app.get("/coffees/list", (req, res) => {
 
 app.get("/image" , async (req , res) => {
 
+  let template = "smet";
+
   try {
 
     const response = await openai.createImage({
-      prompt: "A stylish barber shop banner",
+      prompt: "Give me a barber shop website",
       n: 1,
       size: "1024x1024",
     });
-  
+
     res.status(200).send(response.data.data[0].url);
-  
+
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Something went wrong" });
