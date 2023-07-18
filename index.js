@@ -40,26 +40,6 @@ app.get("/coffees/list", (req, res) => {
   res.json(result);
 });
 
-app.get("/image" , async (req , res) => {
-  
-  let template = "smet";
-  
-  try {
-    
-    const response = await openai.createImage({
-      prompt: "Barber Shop",
-      n: 1,
-      size: "1024x1024",
-    });
-    
-    res.status(200).send(response.data.data[0].url);
-    
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Something went wrong" });
-  }
-})
-
 app.get("/coffees/details/:id", (req, res) => {
   const coffee = coffees.find((c) => c.id == req.params.id);
   
@@ -82,57 +62,55 @@ app.post("/assist" , async(req , res) => {
 
   const {text} = req.body;
 
-  let request = text + " DON'T GIVE RESPONSE IN HTML. The response must be in JSON format with necessary attributes like 'title : {decent title}' and 'description : {catchy short description}'";
+  let roleOfOpenAI = "DON'T GIVE RESPONSE IN HTML. The response must be in JSON format with necessary attributes like 'title : {decent title}', 'description : {catchy short description of 4 to 5 words}', 'subtitle: {its a subdescription of about 6-7 words}', 'services: [{title: {title of the service offered} , description: {description of the service offered in 9-10 words}}] (I want three elements in this array with different information)'";
 
   try {
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo-16k-0613",
-      messages: [{"role": "system", "content": "You are a website builder who gives response in json"}, {role: "user", content: request}],
+      messages: [{"role": "system", "content": roleOfOpenAI}, {role: "user", content: text}],
     });
-    
+
     const generatedResponse = completion.data.choices[0].message;
     const parsedResponse = JSON.parse(generatedResponse.content);
 
-    const response = {
-      title: parsedResponse.title,
-      description: parsedResponse.description,
-    };
-
-    // console.log(response);
     console.log(parsedResponse);
 
-    // const titleRegex = /<title>(.*?)<\/title>/;
-    // const titleMatch = parsedResponse.html.match(titleRegex);
-    // const title = titleMatch && titleMatch[1];
-
-    // console.log(title);
-
-    // Read the template file
     const template = fs.readFileSync(templatePath, 'utf8');
 
     // Replace placeholders in the template with the extracted data
-    const populatedTemplate = template
+    let populatedTemplate = template
     .replace("[PROMPT_TITLE]", parsedResponse.title)
     .replace("[PROMPT_DESCRIPTION]", parsedResponse.description)
     .replace("[PROMPT_SUBTITLE]", parsedResponse.subtitle)
-    .replace("[PROMPT_BUTTON_TEXT]", parsedResponse.buttonText)
-    // .replace("[SERVICE_1_TITLE]", parsedResponse.services[0].name)
-    // .replace("[SERVICE_2_TITLE]", parsedResponse.services[1].name)
-    // .replace("[SERVICE_3_TITLE]", parsedResponse.services[2].name)
-    // .replace("[SERVICE_1_IMAGE]", parsedResponse.serviceImages[0])
-    // .replace("[SERVICE_2_IMAGE]", parsedResponse.serviceImages[1])
-    // .replace("[SERVICE_3_IMAGE]", parsedResponse.serviceImages[2])
-    // .replace("[SERVICE_1_DESCRIPTION]", parsedResponse.serviceDescriptions[0])
-    // .replace("[SERVICE_2_DESCRIPTION]", parsedResponse.serviceDescriptions[1])
-    // .replace("[SERVICE_3_DESCRIPTION]", parsedResponse.serviceDescriptions[2])
-    // .replace("[CTA_BUTTON_TEXT]", parsedResponse.ctaButtonText)
+    .replace("[SERVICE_1_TITLE]", parsedResponse.services[0].title)
+    .replace("[SERVICE_1_DESCRIPTION]", parsedResponse.services[0].description)
+    .replace("[SERVICE_2_TITLE]", parsedResponse.services[1].title)
+    .replace("[SERVICE_2_DESCRIPTION]", parsedResponse.services[1].description)
+    .replace("[SERVICE_3_TITLE]", parsedResponse.services[2].title)
+    .replace("[SERVICE_3_DESCRIPTION]", parsedResponse.services[2].description)
     // .replace("[PANEL_1_TITLE]", parsedResponse.panels[0].title)
     // .replace("[PANEL_1_DESCRIPTION]", parsedResponse.panels[0].description)
     // .replace("[PANEL_2_TITLE]", parsedResponse.panels[1].title)
     // .replace("[PANEL_2_DESCRIPTION]", parsedResponse.panels[1].description)
     // .replace("[DOMAIN_1]", parsedResponse.domains[0])
     // .replace("[DOMAIN_2]", parsedResponse.domains[1]);
+
+
+    // IMAGE GENERATION
+    for (let i = 0; i < parsedResponse.services.length; i++) {
+
+      const serviceTitle = parsedResponse.services[i].title;
+      const imageResponse = await openai.createImage({
+        prompt: `Image of ${serviceTitle}`,
+        n: 1,
+        size: "1024x1024",
+      });
+
+      const imageUrl = imageResponse.data.data[0].url;
+
+      populatedTemplate = populatedTemplate.replace(`[SERVICE_${i + 1}_IMAGE]`, imageUrl);
+    }
 
     res.set('Content-Type', 'text/html');
     res.send(populatedTemplate);
