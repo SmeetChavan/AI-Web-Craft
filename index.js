@@ -3,6 +3,9 @@ const coffees = require("./coffees.json");
 const oas = require("./oas.json");
 const manifest = require("./manifest.json");
 const axios = require('axios');
+const cors = require('cors');
+
+
 
 const dotenv = require('dotenv');
 const { Configuration, OpenAIApi } = require("openai");
@@ -19,12 +22,13 @@ dotenv.config({
 const api_key = process.env.API_KEY;
 
 const configuration = new Configuration({
-    apiKey: api_key,
+  apiKey: api_key,
 });
 const openai = new OpenAIApi(configuration);
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const port = 4000;
 
@@ -96,15 +100,32 @@ app.post("/assist" , async(req , res) => {
     // .replace("[DOMAIN_1]", parsedResponse.domains[0])
     // .replace("[DOMAIN_2]", parsedResponse.domains[1]);
 
+    // LOGO IMAGE GENERATION
+    const imageResponse1 = await openai.createImage({
+      prompt: `logo for my website named ${parsedResponse.title}`,
+      n: 1,
+      size: "256x256",
+    });
+    const imageUrl1 = imageResponse1.data.data[0].url;
+    populatedTemplate = populatedTemplate.replace(`[LOGO]`, imageUrl1);
 
-    // IMAGE GENERATION
+    // BANNER IMAGE GENERATION
+    const imageResponse2 = await openai.createImage({
+      prompt: `SVG Banner for my website titled: ${parsedResponse.title}, and descrption: ${parsedResponse.description}`,
+      n: 1,
+      size: "512x512",
+    });
+    const imageUrl2 = imageResponse2.data.data[0].url;
+    populatedTemplate = populatedTemplate.replace(`[WELCOME_IMAGE]`, imageUrl2);
+
+    // SERVICES IMAGE GENERATION
     for (let i = 0; i < parsedResponse.services.length; i++) {
 
-      const serviceTitle = parsedResponse.services[i].title;
+      const serviceDescription = parsedResponse.services[i].description;
       const imageResponse = await openai.createImage({
-        prompt: `Image of ${serviceTitle}`,
+        prompt: `Image of ${serviceDescription}`,
         n: 1,
-        size: "1024x1024",
+        size: "512x512",
       });
 
       const imageUrl = imageResponse.data.data[0].url;
