@@ -4,8 +4,9 @@ const oas = require("./oas.json");
 const manifest = require("./manifest.json");
 const axios = require('axios');
 const cors = require('cors');
+const fileUpload = require("express-fileupload");
 
-
+const { Readable } = require("stream");
 
 const dotenv = require('dotenv');
 const { Configuration, OpenAIApi } = require("openai");
@@ -29,6 +30,7 @@ const openai = new OpenAIApi(configuration);
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(fileUpload());
 
 const port = 4000;
 
@@ -139,6 +141,28 @@ app.post("/assist" , async(req , res) => {
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('An error occurred');
+  }
+});
+
+app.post("/assist-audio", async (req, res) => {
+  if (!req.files || !req.files.audio) {
+    return res.status(400).json({ error: "Audio file not provided" });
+  }
+
+  const audioFile = req.files.audio;
+
+  try {
+
+    const audioStream = new Readable();
+    audioStream.push(audioFile.data);
+    audioStream.push(null); // Indicate the end of the stream
+
+    const response = await openai.createTranscription(audioStream, "whisper-1");
+
+    res.json({ transcript: response.data });
+  } catch (error) {
+    console.error("OpenAI Speech to Text Error:", error);
+    res.status(500).json({ error: "Error transcribing audio" });
   }
 });
 

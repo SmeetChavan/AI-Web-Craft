@@ -14,19 +14,26 @@ function App() {
 	const handleSubmit = async(e) => {
 		e.preventDefault();
 
-		
-		toast.loading("Generating..");
+		try {
+			
+			toast.loading("Generating..");
+	
+			setIsLoading(true);
+			setIsDisabled(true);
+			const response = await axios.post("http://localhost:4000/assist" , {
+				text: req,
+			});
+			
+			toast.dismiss();
+			toast.success("Success");
+			setContent(response.data);
+			
+		} catch (error) {
+			toast.dismiss();
+			toast.error(error.message);
+		}
 
-		setIsLoading(true);
-		setIsDisabled(true);
-		const response = await axios.post("http://localhost:4000/assist" , {
-			text: req,
-		});
-		
 		setIsLoading(false);
-		toast.dismiss();
-		toast.success("Success");
-		setContent(response.data);
 		setReq("");
 		setIsDisabled(false);
 	}
@@ -39,15 +46,15 @@ function App() {
 		}
 	};
 
-	const handleStartRecording = () => {
+	const handleTranscribeAudio = () => {
 		setRecording(true);
 		const recognition = new window.webkitSpeechRecognition();
-		recognition.continuous = true;
+		recognition.continuous = false;
 	
 		recognition.onresult = (event) => {
-		  const transcript = event.results[event.results.length - 1][0].transcript;
+		  const transcript = event.results[0][0].transcript;
 		  setRecording(false);
-		  sendAudioRequest(transcript);
+		  setReq(transcript);
 		};
 	
 		recognition.onerror = (event) => {
@@ -57,16 +64,35 @@ function App() {
 	
 		recognition.start();
 	};
+
+	const handleAudioUpload = async (e) => {
+
+		const file = e.target.files[0];
+		const formData = new FormData();
+		formData.append("audio", file);
 	
-	const sendAudioRequest = async (transcript) => {
+		setIsLoading(true);
+		setIsDisabled(true);
+
+		toast.loading("Transcribing...");
 		try {
-			const response = await axios.post("http://localhost:4000/assist", {
-			audio: transcript,
-			});
-			setContent(response.data);
+		  const response = await axios.post("http://localhost:4000/assist-audio", formData, {
+			headers: {
+			  "Content-Type": "multipart/form-data",
+			},
+		  });
+
+		  toast.dismiss();
+		  toast.success("Transcription Success");
+		  setContent(response.data.transcript);
 		} catch (error) {
-			console.error("Error sending audio request:", error);
+		  console.error("Transcription Error:", error);
+		  toast.dismiss();
+		  toast.error("Transcription Error");
 		}
+	
+		setIsLoading(false);
+		setIsDisabled(false);
 	};
 
   	return (
@@ -77,7 +103,7 @@ function App() {
 			<form>
 
 				<label htmlFor="request"><h1>Enter your request:</h1></label>
-				<input type="text" id="request" onChange={(e) => setReq(e.target.value)} />
+				<input value={req} type="text" id="request" onChange={(e) => setReq(e.target.value)} />
 				<input disabled={isDisabled} type="submit" value="Submit" onClick={(e) => handleSubmit(e)} />
 			</form>
 
@@ -93,7 +119,10 @@ function App() {
         	)}
 
 			{!recording ? (
-          		<button onClick={handleStartRecording}>Start Recording</button>
+				<div style={{display: 'flex' , flexDirection: 'column' , gap: '10px' , justifyContent: 'center' , alignItems: 'center'}}>
+					<button style={{width: '200px'}} onClick={handleTranscribeAudio}>Start Recording</button><br/>
+					<input type="file" accept="audio/*" onChange={(e) => handleAudioUpload(e)} />
+			  	</div>
         		) : (
           		<p>Recording...</p>
         		)
