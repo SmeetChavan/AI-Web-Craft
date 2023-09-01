@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+*{
+    font-family: 'Poppins', sans-serif;
+}
+
+.orange_gradient{
+    background-image: linear-gradient(to right, #FFA500, #e86812, #FFCC00);
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+
+    background-color: #F59E0B;
+}
+
+.head_text{
+    margin-top: 1.25rem;
+    font-size: 3.5rem;
+    line-height: 1;
+    font-weight: 800;
+    text-align: center; 
+    color: #000000;
+}
+
+.desc{
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    text-align: center;
+    color: #4B5563;
+
+    font-weight: 100;
+
+    width: 45rem;
+}
+
+header{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+
+    > nav{
+        width: 100%;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-top: 0.5rem;
+
+        > div{
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+
+            > img{
+                width: 3rem;
+                object-fit: contain;
+            }
+
+            > span{
+                font-family: 'Poppins', sans-serif;
+                font-weight: 600;
+                font-size: 1.5rem;
+            }
+        }
+
+        > button{
+
+            padding-top: 0.375rem;
+            padding-bottom: 0.375rem; 
+            padding-left: 1.25rem;
+            padding-right: 1.25rem; 
+            border-radius: 9999px; 
+            border-width: 1px; 
+            border-color: #000000; 
+            font-size: 0.875rem;
+            line-height: 1.25rem; 
+            color: #ffffff; 
+            background-color: #000000; 
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+
+            &:hover{
+                background-color: #ffffff;
+                color: black;
+                cursor: pointer;
+            }
+
+        }
+    }
+}
