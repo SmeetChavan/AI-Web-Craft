@@ -10,6 +10,8 @@ const Body = () => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [recording, setRecording] = useState(false);
 
+  let downloadLink;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -22,9 +24,21 @@ const Body = () => {
         text: req,
       });
 
+      const blob = new Blob([response.data], { type: "text/html" });
+
+      // Create a download link
+      downloadLink = document.createElement("a");
+      downloadLink.href = window.URL.createObjectURL(blob);
+      downloadLink.download = "website.html";
+
+      // Simulate a click event to trigger the download
+      downloadLink.click();
+
       toast.dismiss();
       toast.success("Success");
+
       setContent(response.data);
+
     } catch (error) {
       toast.dismiss();
       toast.error(error.message);
