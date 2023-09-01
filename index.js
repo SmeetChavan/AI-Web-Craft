@@ -1,10 +1,5 @@
 const express = require("express");
-const coffees = require("./coffees.json");
-const oas = require("./oas.json");
-const manifest = require("./manifest.json");
-const axios = require('axios');
 const cors = require('cors');
-const fileUpload = require("express-fileupload");
 
 const { Readable } = require("stream");
 
@@ -28,41 +23,11 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 const app = express();
+
 app.use(express.json());
 app.use(cors());
-app.use(fileUpload());
 
 const port = 4000;
-
-app.get("/coffees/list", (req, res) => {
-  const result = coffees.map((coffee) => {
-    return {
-      id: coffee.id,
-      name: coffee.name,
-      price: coffee.price,
-    };
-  });
-  
-  res.json(result);
-});
-
-app.get("/coffees/details/:id", (req, res) => {
-  const coffee = coffees.find((c) => c.id == req.params.id);
-  
-  if (!coffee) {
-    return res.status(404).json({ error: "Coffee not found" });
-  }
-  
-  res.json(coffee);
-});
-
-app.get("/oas.json", (req, res) => {
-  res.json(oas);
-});
-
-app.get("/.well-known/ai-plugin.json", (req, res) => {
-  res.json(manifest);
-});
 
 app.post("/assist" , async(req , res) => {
 
@@ -95,12 +60,6 @@ app.post("/assist" , async(req , res) => {
     .replace("[SERVICE_2_DESCRIPTION]", parsedResponse.services[1].description)
     .replace("[SERVICE_3_TITLE]", parsedResponse.services[2].title)
     .replace("[SERVICE_3_DESCRIPTION]", parsedResponse.services[2].description)
-    // .replace("[PANEL_1_TITLE]", parsedResponse.panels[0].title)
-    // .replace("[PANEL_1_DESCRIPTION]", parsedResponse.panels[0].description)
-    // .replace("[PANEL_2_TITLE]", parsedResponse.panels[1].title)
-    // .replace("[PANEL_2_DESCRIPTION]", parsedResponse.panels[1].description)
-    // .replace("[DOMAIN_1]", parsedResponse.domains[0])
-    // .replace("[DOMAIN_2]", parsedResponse.domains[1]);
 
     // LOGO IMAGE GENERATION
     const imageResponse1 = await openai.createImage({
@@ -141,28 +100,6 @@ app.post("/assist" , async(req , res) => {
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('An error occurred');
-  }
-});
-
-app.post("/assist-audio", async (req, res) => {
-  if (!req.files || !req.files.audio) {
-    return res.status(400).json({ error: "Audio file not provided" });
-  }
-
-  const audioFile = req.files.audio;
-
-  try {
-
-    const audioStream = new Readable();
-    audioStream.push(audioFile.data);
-    audioStream.push(null); // Indicate the end of the stream
-
-    const response = await openai.createTranscription(audioStream, "whisper-1");
-
-    res.json({ transcript: response.data });
-  } catch (error) {
-    console.error("OpenAI Speech to Text Error:", error);
-    res.status(500).json({ error: "Error transcribing audio" });
   }
 });
 
